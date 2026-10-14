@@ -15,14 +15,16 @@ INDEXES = [
     ("social_accounts", [("brand_id", ASCENDING)], {}),
     ("competitors", [("brand_id", ASCENDING), ("place_id", ASCENDING)], {"unique": True}),
     ("competitor_posts", [("competitor_id", ASCENDING), ("posted_at", DESCENDING)], {}),
+    ("competitor_posts", [("competitor_id", ASCENDING), ("external_id", ASCENDING)],
+     {"unique": True, "partialFilterExpression": {"external_id": {"$type": "string"}}}),
     ("intelligence_reports", [("brand_id", ASCENDING), ("created_at", DESCENDING)], {}),
     ("content_strategies", [("brand_id", ASCENDING), ("status", ASCENDING)], {}),
     ("content_strategies", [("intelligence_id", ASCENDING)], {}),
     ("decisions", [("strategy_id", ASCENDING)], {}),
     ("content_items", [("strategy_id", ASCENDING), ("status", ASCENDING)], {}),
     ("queue_entries", [("content_id", ASCENDING)], {}),
-    ("queue_entries", [("scheduled_time", ASCENDING)], {}),
-    ("metrics", [("queue_id", ASCENDING)], {}),
+    ("queue_entries", [("status", ASCENDING), ("scheduled_time", ASCENDING)], {}),
+    ("metrics", [("queue_id", ASCENDING), ("collected_at", DESCENDING)], {}),
     ("strategy_weights", [("brand_id", ASCENDING)], {"unique": True}),
     ("adaptation_log", [("brand_id", ASCENDING), ("created_at", DESCENDING)], {}),
     ("explanations", [("brand_id", ASCENDING)], {}),
@@ -30,7 +32,7 @@ INDEXES = [
 ]
 
 async def main():
-    client = AsyncMongoClient(settings.mongodb_uri)
+    client = AsyncMongoClient(settings.mongodb_uri, tz_aware=True)
     db = client[settings.mongodb_db]
     existing = set(await db.list_collection_names())
     for name in COLLECTIONS:

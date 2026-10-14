@@ -1,8 +1,5 @@
 """Data models for ABGIE: one Pydantic model per MongoDB collection.
-
 Collection names and indexed fields match app/db/init_db.py.
-Fields that are not indexed there are proposals based on the FYP proposal;
-check them against the ERD and adjust.
 """
 from datetime import datetime, timezone
 from typing import Annotated, Any, Literal, Optional
@@ -44,15 +41,30 @@ class User(MongoModel):
 
 
 # --------------------------------------------------------------- brands
-class Brand(MongoModel):
-    user_id: PyId                   # index
-    name: str
-    industry: str
+class BrandBase(BaseModel):
+    """Fields the user fills in the brand form."""
+    name: str = Field(min_length=1)
+    industry: str = Field(min_length=1)
     description: Optional[str] = None
+    website: Optional[str] = None
+    products: list[str] = []
     target_audience: str
-    goals: list[str] = []           # e.g. engagement, reach
+    goals: list[str] = []                   # e.g. engagement, reach
+    platforms: list[Platform] = []
+    posts_per_week: Optional[int] = Field(default=None, ge=1, le=50)
     tone: Optional[str] = None
-    city: Optional[str] = None
+    city: str
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+    radius_km: float = Field(gt=0, le=50)   # check Google's current max radius
+
+
+class BrandCreate(BrandBase):
+    """What the API accepts from the form (no user_id, no created_at)."""
+
+
+class Brand(MongoModel, BrandBase):
+    user_id: PyId                   # index
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -60,8 +72,9 @@ class SocialAccount(MongoModel):
     brand_id: PyId                  # index
     platform: Platform
     username: str
-    external_id: Optional[str] = None   # Instagram user id / Facebook page id
-    access_token: Optional[str] = None  # never log or commit this
+    external_id: Optional[str] = None       # Instagram user id / Facebook page id
+    access_token_encrypted: Optional[str] = None  # encrypted before saving, never log
+    expires_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -71,21 +84,28 @@ class Competitor(MongoModel):
     place_id: str                   # Google Places id
     name: str
     address: Optional[str] = None
+    distance_km: Optional[float] = None
+    category: Optional[str] = None
+    website: Optional[str] = None
     rating: Optional[float] = None
+    review_count: int = 0
     instagram_username: Optional[str] = None
     followers_count: int = 0
     avg_engagement_rate: float = 0.0
+    status: Literal["discovered", "analysed", "no_public_instagram"] = "discovered"
     created_at: datetime = Field(default_factory=utcnow)
 
 
 class CompetitorPost(MongoModel):
-    competitor_id: PyId             # index with posted_at
+    competitor_id: PyId             # unique together with external_id
+    external_id: str                # Instagram media id (stops duplicate saves)
     platform: Platform = "instagram"
     caption: Optional[str] = None
     hashtags: list[str] = []
     media_type: Optional[str] = None
     like_count: int = 0
     comments_count: int = 0
+    engagement_rate: Optional[float] = None
     posted_at: datetime
 
 
@@ -94,9 +114,10 @@ class IntelligenceReport(MongoModel):
     brand_id: PyId                  # index with created_at
     brand_tone: Optional[str] = None
     competitor_benchmark: dict[str, Any] = {}
-    trends: list[str] = []
+    trends: list[dict[str, Any]] = []       # {topic, hashtags, growth_pct}
     audience_clusters: list[dict[str, Any]] = []
-    strategy_object: dict[str, Any] = {}    # structured output of Step 2
+    strategy_object: dict[str, Any] = {}    # structured output of P2
+    confidence: float = Field(default=0, ge=0, le=100)
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -127,6 +148,8 @@ class Decision(MongoModel):
     score: Optional[float] = None
     threshold: Optional[float] = None
     approved: Optional[bool] = None
+    reason: Optional[str] = None
+    retry_count: int = 0
     created_at: datetime = Field(default_factory=utcnow)
 
     @staticmethod
@@ -139,6 +162,8 @@ class Decision(MongoModel):
 class ContentItem(MongoModel):
     strategy_id: PyId               # index with status
     platform: Platform
+    content_type: Optional[str] = None      # image / reel / carousel
+    theme: Optional[str] = None
     caption: str
     cta: Optional[str] = None
     hashtags: list[str] = []
@@ -150,8 +175,9 @@ class ContentItem(MongoModel):
 class QueueEntry(MongoModel):
     content_id: PyId                # index
     platform: Platform
-    scheduled_time: datetime        # index
+    scheduled_time: datetime        # index with status
     status: Literal["queued", "published", "failed"] = "queued"
+    retry_count: int = 0
     published_at: Optional[datetime] = None
     external_post_id: Optional[str] = None
     error: Optional[str] = None
@@ -159,7 +185,7 @@ class QueueEntry(MongoModel):
 
 # -------------------------------------------------------------- learning
 class Metric(MongoModel):
-    queue_id: PyId                  # index
+    queue_id: PyId                  # index with collected_at
     likes: int = 0
     comments: int = 0
     shares: int = 0
@@ -184,7 +210,9 @@ class Metric(MongoModel):
 
 class StrategyWeights(MongoModel):
     brand_id: PyId                  # unique index
+    version: int = 1
     weights: dict[str, float] = {}
+    thresholds: dict[str, float] = {}       # approval, deviation
     updated_at: datetime = Field(default_factory=utcnow)
 
 
@@ -201,7 +229,7 @@ class AdaptationLog(MongoModel):
 # ---------------------------------------------------------- transparency
 class Explanation(MongoModel):
     brand_id: PyId                  # index
-    decision_id: Optional[PyId] = None  # index
+    decision_id: Optional[PyId] = None      # index
     decision_type: str
     reasoning: str
     created_at: datetime = Field(default_factory=utcnow)
