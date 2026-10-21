@@ -1,5 +1,5 @@
 from bson import ObjectId
-from pymongo import AsyncMongoClient
+from pymongo import ASCENDING, AsyncMongoClient
 from app.config import settings
 
 client: AsyncMongoClient | None = None
@@ -21,6 +21,12 @@ async def connect():
 
     client = AsyncMongoClient(settings.mongodb_uri, **kwargs)
     await client.admin.command("ping")   # fails here if the connection is wrong
+    await client[settings.mongodb_db].brands.create_index(
+        [("user_id", ASCENDING), ("normalized_name", ASCENDING)],
+        unique=True,
+        partialFilterExpression={"normalized_name": {"$type": "string"}},
+        name="unique_brand_name_per_user",
+    )
 
 
 
@@ -52,4 +58,4 @@ if __name__ == "__main__":
         finally:
             await close()
 
-    asyncio.run(_test())
+    asyncio.run(_test())

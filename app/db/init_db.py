@@ -12,6 +12,9 @@ COLLECTIONS = [
 INDEXES = [
     ("users", [("email", ASCENDING)], {"unique": True}),
     ("brands", [("user_id", ASCENDING)], {}),
+    ("brands", [("user_id", ASCENDING), ("normalized_name", ASCENDING)],
+         {"unique": True, "partialFilterExpression": {"normalized_name": {"$type": "string"}},
+            "name": "unique_brand_name_per_user"}),
     ("social_accounts", [("brand_id", ASCENDING)], {}),
     ("competitors", [("brand_id", ASCENDING), ("place_id", ASCENDING)], {"unique": True}),
     ("competitor_posts", [("competitor_id", ASCENDING), ("posted_at", DESCENDING)], {}),

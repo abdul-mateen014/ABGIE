@@ -1,1 +1,833 @@
-<!-- Form Page -->
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#172722">
+    <title>ABGIE | Brand workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #172321;
+            --muted: #68746f;
+            --paper: #f4f6f1;
+            --line: #dce2dc;
+            --green: #176b54;
+            --green-dark: #105440;
+            --lime: #d8f36a;
+            --coral: #df745e;
+            font-family: "DM Sans", sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        .shell {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(290px, .78fr) minmax(0, 1.55fr);
+        }
+
+        .rail {
+            position: relative;
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 34px clamp(24px, 4vw, 62px);
+            background: #172722;
+            color: #f3f6ed;
+        }
+
+        .rail::after {
+            position: absolute;
+            right: -120px;
+            bottom: 110px;
+            width: 300px;
+            aspect-ratio: 1;
+            border: 1px solid #7bc1a24a;
+            border-radius: 50%;
+            content: "";
+            box-shadow: 0 0 0 36px #7bc1a21a, 0 0 0 72px #7bc1a211;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 34px;
+            aspect-ratio: 1;
+            place-items: center;
+            border-radius: 9px;
+            background: var(--lime);
+            color: #172722;
+            font-size: 16px;
+        }
+
+        .rail-copy {
+            position: relative;
+            z-index: 1;
+            margin: auto 0;
+            padding: 70px 0;
+        }
+
+        .eyebrow {
+            color: #b5d4c4;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            max-width: 420px;
+            margin: 17px 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(36px, 4vw, 58px);
+            line-height: 1.04;
+            letter-spacing: 0;
+        }
+
+        .rail-copy p {
+            max-width: 360px;
+            color: #bdcbc4;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .rail-foot {
+            position: relative;
+            z-index: 1;
+            color: #a7b7af;
+            font-size: 12px;
+        }
+
+        main {
+            width: min(100%, 960px);
+            margin: 0 auto;
+            padding: 26px clamp(20px, 5vw, 70px) 60px;
+        }
+
+        .topbar {
+            display: flex;
+            min-height: 42px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .topbar-label {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .quiet-button {
+            border: 0;
+            background: transparent;
+            color: var(--green-dark);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .content {
+            max-width: 660px;
+            margin: 46px auto 0;
+            animation: appear .42s ease-out both;
+        }
+
+        @keyframes appear {
+            from {
+                opacity: 0;
+                transform: translateY(9px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content h2 {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 29px;
+            letter-spacing: 0;
+        }
+
+        .intro {
+            margin: 8px 0 25px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .mode-switch {
+            display: inline-flex;
+            gap: 4px;
+            padding: 4px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #e9ede7;
+        }
+
+        .mode-switch button {
+            padding: 9px 15px;
+            border: 0;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mode-switch button[aria-pressed="true"] {
+            background: #fff;
+            color: var(--ink);
+            box-shadow: 0 1px 3px #17232119;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        .fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .field {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label,
+        legend {
+            color: #31403b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .required-mark {
+            padding-left: 2px;
+            color: var(--coral);
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            border: 1px solid #cbd5cd;
+            border-radius: 6px;
+            padding: 11px 12px;
+            outline: none;
+            background: #fff;
+            color: var(--ink);
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px #176b5418;
+        }
+
+        textarea {
+            min-height: 78px;
+            resize: vertical;
+        }
+
+        .hint {
+            margin: 0;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        fieldset {
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        .checks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            margin-top: 9px;
+        }
+
+        .check {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #31403b;
+            font-size: 13px;
+        }
+
+        .check input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--green);
+        }
+
+        #map {
+            width: 100%;
+            height: 250px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #e8ece6;
+        }
+
+        .map-fallback {
+            padding: 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .primary {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--green);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .primary:hover {
+            background: var(--green-dark);
+        }
+
+        .primary:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        .form-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .message {
+            min-height: 20px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .message.error {
+            color: #a83c2d;
+        }
+
+        .message.success {
+            color: var(--green-dark);
+        }
+
+        .section-rule {
+            height: 1px;
+            margin: 36px 0 25px;
+            background: var(--line);
+        }
+
+        .saved-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .saved-head h3 {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 19px;
+        }
+
+        .saved-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .saved-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .saved-item strong {
+            display: block;
+            font-size: 14px;
+        }
+
+        .saved-item span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .delete-button {
+            flex: 0 0 auto;
+            align-self: center;
+            border: 1px solid #e5c6bf;
+            border-radius: 5px;
+            padding: 7px 10px;
+            background: transparent;
+            color: #a83c2d;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background: #fff1ee;
+        }
+
+        .delete-button:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        .empty {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 760px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .rail {
+                min-height: auto;
+                padding: 20px 24px;
+            }
+
+            .rail-copy {
+                padding: 40px 0 28px;
+            }
+
+            h1 {
+                max-width: 500px;
+                font-size: 38px;
+            }
+
+            .rail-copy p {
+                max-width: 500px;
+            }
+
+            .rail-foot {
+                display: none;
+            }
+
+            .rail::after {
+                right: -185px;
+                bottom: -175px;
+            }
+
+            main {
+                padding-top: 18px;
+            }
+
+            .content {
+                margin-top: 32px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .fields {
+                grid-template-columns: 1fr;
+            }
+
+            .field.full {
+                grid-column: auto;
+            }
+
+            .content h2 {
+                font-size: 26px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+        <aside class="rail">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">A</span> ABGIE</div>
+            <div class="rail-copy">
+                <span class="eyebrow">Business growth intelligence</span>
+                <h1>Make your next move count.</h1>
+                <p>Bring your brand context into one workspace and turn better signals into clearer decisions.</p>
+            </div>
+            <div class="rail-foot">A sharper view of what comes next.</div>
+        </aside>
+        <main>
+            <div class="topbar">
+                <span class="topbar-label" id="session-label">Your workspace</span>
+                <button class="quiet-button" id="logout-button" type="button" hidden>Sign out</button>
+            </div>
+
+            <section class="content" id="auth-view">
+                <h2 id="auth-title">Welcome to ABGIE</h2>
+                <p class="intro" id="auth-intro">Sign in or create an account to start your brand workspace.</p>
+                <div class="mode-switch" role="group" aria-label="Account action">
+                    <button type="button" data-mode="login" aria-pressed="true">Sign in</button>
+                    <button type="button" data-mode="register" aria-pressed="false">Create account</button>
+                </div>
+                <form id="auth-form">
+                    <div class="fields">
+                        <div class="field full" id="name-field" hidden>
+                            <label for="account-name">Your name<span class="required-mark" aria-hidden="true">*</span></label>
+                            <input id="account-name" name="name" autocomplete="name" maxlength="120">
+                        </div>
+                        <div class="field full">
+                            <label for="email">Email address<span class="required-mark" aria-hidden="true">*</span></label>
+                            <input id="email" name="email" type="email" autocomplete="email" required maxlength="254">
+                        </div>
+                        <div class="field full">
+                            <label for="password">Password<span class="required-mark" aria-hidden="true">*</span></label>
+                            <input id="password" name="password" type="password" autocomplete="current-password"
+                                required minlength="8" maxlength="128">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="primary" id="auth-submit" type="submit">Sign in</button>
+                        <span class="message" id="auth-message" role="status" aria-live="polite"></span>
+                    </div>
+                </form>
+            </section>
+
+            <section class="content" id="workspace-view" hidden>
+                <h2>Set up your brand</h2>
+                <p class="intro">Add the context ABGIE needs to understand your business and local market.</p>
+                <form id="brand-form">
+                    <div class="fields">
+                        <div class="field"><label for="brand-name">Brand name<span class="required-mark" aria-hidden="true">*</span></label><input id="brand-name" name="name"
+                                required maxlength="120"></div>
+                        <div class="field"><label for="niche">Niche<span class="required-mark" aria-hidden="true">*</span></label><input id="niche" name="industry" required
+                                placeholder="e.g. Specialty coffee"></div>
+                        <div class="field full"><label for="products">Products or services</label><input id="products"
+                                name="products" placeholder="Coffee, pastries"></div>
+                        <div class="field"><label for="website">Website</label><input id="website" name="website"
+                                type="url" placeholder="https://example.com"></div>
+                        <div class="field"><label for="city">City<span class="required-mark" aria-hidden="true">*</span></label><input id="city" name="city" required
+                                placeholder="e.g. Lahore"></div>
+                        <div class="field full">
+                            <label for="map">Map point<span class="required-mark" aria-hidden="true">*</span></label>
+                            <p class="hint">Click the map to choose your business location, or enter coordinates below.
+                            </p>
+                            <div id="map" aria-label="Choose a business location on the map"></div>
+                            <div class="fields">
+                                <div class="field"><label for="latitude">Latitude<span class="required-mark" aria-hidden="true">*</span></label><input id="latitude" name="lat"
+                                        type="number" step="any" min="-90" max="90" value="31.5204" required></div>
+                                <div class="field"><label for="longitude">Longitude<span class="required-mark" aria-hidden="true">*</span></label><input id="longitude"
+                                        name="lng" type="number" step="any" min="-180" max="180" value="74.3587"
+                                        required></div>
+                            </div>
+                        </div>
+                        <div class="field"><label for="radius">Radius (km)<span class="required-mark" aria-hidden="true">*</span></label><input id="radius" name="radius_km"
+                                type="number" min="0.1" max="50" step="any" value="5" required></div>
+                        <div class="field"><label for="audience">Target audience<span class="required-mark" aria-hidden="true">*</span></label><input id="audience"
+                                name="target_audience" required placeholder="Students and remote workers"></div>
+                        <fieldset class="field full">
+                            <legend>Platforms</legend>
+                            <div class="checks">
+                                <label class="check"><input type="checkbox" name="platforms" value="instagram">
+                                    Instagram</label>
+                                <label class="check"><input type="checkbox" name="platforms" value="facebook">
+                                    Facebook</label>
+                            </div>
+                        </fieldset>
+                        <div class="field full"><label for="goals">Goals</label><input id="goals" name="goals"
+                                placeholder="Engagement, reach"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="primary" id="brand-submit" type="submit">Save brand <span
+                                aria-hidden="true">→</span></button>
+                        <span class="message" id="brand-message" role="status" aria-live="polite"></span>
+                    </div>
+                </form>
+                <div class="section-rule"></div>
+                <div class="saved-head">
+                    <h3>Saved brands</h3><button class="quiet-button" id="refresh-button" type="button">Refresh</button>
+                </div>
+                <div class="saved-list" id="saved-list">
+                    <p class="empty">Your saved brands will appear here.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        const authView = document.querySelector("#auth-view");
+        const workspaceView = document.querySelector("#workspace-view");
+        const authForm = document.querySelector("#auth-form");
+        const authMessage = document.querySelector("#auth-message");
+        const brandMessage = document.querySelector("#brand-message");
+        const savedList = document.querySelector("#saved-list");
+        const sessionLabel = document.querySelector("#session-label");
+        const logoutButton = document.querySelector("#logout-button");
+        let authMode = "login";
+        let map;
+        let marker;
+
+        function showMessage(element, message, kind = "") {
+            element.textContent = message;
+            element.className = `message ${kind}`;
+        }
+
+        async function request(path, options = {}) {
+            const token = sessionStorage.getItem("abgie-token");
+            const response = await fetch(path, {
+                ...options,
+                headers: {
+                    ...(options.body ? { "Content-Type": "application/json" } : {}),
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    ...options.headers,
+                },
+            });
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 401 && token) handleExpiredSession();
+            if (!response.ok) throw new Error(data.detail || "Something went wrong. Please try again.");
+            return data;
+        }
+
+        function handleExpiredSession() {
+            sessionStorage.removeItem("abgie-token");
+            workspaceView.hidden = true;
+            authView.hidden = false;
+            logoutButton.hidden = true;
+            sessionLabel.textContent = "Your workspace";
+            showMessage(authMessage, "Your session expired. Please sign in again.", "error");
+        }
+
+        function setLocation(latitude, longitude) {
+            document.querySelector("#latitude").value = latitude.toFixed(6);
+            document.querySelector("#longitude").value = longitude.toFixed(6);
+            if (map) {
+                const point = [latitude, longitude];
+                if (marker) marker.setLatLng(point);
+                else marker = L.marker(point).addTo(map);
+            }
+        }
+
+        function initializeMap() {
+            if (!window.L || map) return;
+            const initialPoint = [31.5204, 74.3587];
+            map = L.map("map").setView(initialPoint, 12);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: "&copy; OpenStreetMap contributors",
+            }).addTo(map);
+            marker = L.marker(initialPoint).addTo(map);
+            map.on("click", event => setLocation(event.latlng.lat, event.latlng.lng));
+            map.invalidateSize();
+        }
+
+        function setAuthenticated(user) {
+            authView.hidden = true;
+            workspaceView.hidden = false;
+            logoutButton.hidden = false;
+            sessionLabel.textContent = `Signed in as ${user.name}`;
+            initializeMap();
+            loadBrands();
+        }
+
+        function setAuthMode(mode) {
+            authMode = mode;
+            const registering = mode === "register";
+            document.querySelector("#name-field").hidden = !registering;
+            document.querySelector("#account-name").required = registering;
+            document.querySelector("#password").autocomplete = registering ? "new-password" : "current-password";
+            document.querySelector("#auth-title").textContent = registering ? "Create your account" : "Welcome to ABGIE";
+            document.querySelector("#auth-intro").textContent = registering
+                ? "Create an account to save and manage your brand workspace."
+                : "Sign in or create an account to start your brand workspace.";
+            document.querySelector("#auth-submit").textContent = registering ? "Create account" : "Sign in";
+            document.querySelectorAll("[data-mode]").forEach(button => {
+                button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+            });
+            showMessage(authMessage, "");
+        }
+
+        async function loadBrands() {
+            savedList.replaceChildren();
+            try {
+                const brands = await request("/api/brands");
+                if (!brands.length) {
+                    savedList.innerHTML = '<p class="empty">No brands saved yet.</p>';
+                    return;
+                }
+                for (const brand of brands) {
+                    const item = document.createElement("div");
+                    item.className = "saved-item";
+                    const details = document.createElement("div");
+                    const name = document.createElement("strong");
+                    const meta = document.createElement("span");
+                    const deleteButton = document.createElement("button");
+                    name.textContent = brand.name;
+                    meta.textContent = `${brand.industry} · ${brand.city}`;
+                    deleteButton.type = "button";
+                    deleteButton.className = "delete-button";
+                    deleteButton.textContent = "Delete";
+                    deleteButton.setAttribute("aria-label", `Delete ${brand.name}`);
+                    deleteButton.addEventListener("click", async () => {
+                        if (!window.confirm(`Delete ${brand.name}?`)) return;
+                        deleteButton.disabled = true;
+                        try {
+                            await request(`/api/brands/${encodeURIComponent(brand.id)}`, { method: "DELETE" });
+                            showMessage(brandMessage, `${brand.name} deleted.`, "success");
+                            await loadBrands();
+                        } catch (error) {
+                            showMessage(brandMessage, error.message, "error");
+                        } finally {
+                            deleteButton.disabled = false;
+                        }
+                    });
+                    details.append(name, meta);
+                    item.append(details, deleteButton);
+                    savedList.append(item);
+                }
+            } catch (error) {
+                savedList.innerHTML = '<p class="empty">Could not load saved brands.</p>';
+                showMessage(brandMessage, error.message, "error");
+            }
+        }
+
+        document.querySelectorAll("[data-mode]").forEach(button => {
+            button.addEventListener("click", () => setAuthMode(button.dataset.mode));
+        });
+
+        authForm.addEventListener("submit", async event => {
+            event.preventDefault();
+            const button = document.querySelector("#auth-submit");
+            button.disabled = true;
+            showMessage(authMessage, "Working…");
+            const values = new FormData(authForm);
+            const payload = { email: values.get("email"), password: values.get("password") };
+            if (authMode === "register") payload.name = values.get("name");
+            try {
+                const result = await request(`/api/auth/${authMode === "register" ? "register" : "login"}`, {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                });
+                sessionStorage.setItem("abgie-token", result.access_token);
+                setAuthenticated(result.user);
+            } catch (error) {
+                showMessage(authMessage, error.message, "error");
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.querySelector("#brand-form").addEventListener("submit", async event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const button = document.querySelector("#brand-submit");
+            button.disabled = true;
+            showMessage(brandMessage, "Saving brand…");
+            const values = new FormData(form);
+            const toList = name => String(values.get(name) || "").split(",").map(value => value.trim()).filter(Boolean);
+            const payload = {
+                name: values.get("name"),
+                industry: values.get("industry"),
+                products: toList("products"),
+                website: values.get("website") || null,
+                city: values.get("city"),
+                lat: Number(values.get("lat")),
+                lng: Number(values.get("lng")),
+                radius_km: Number(values.get("radius_km")),
+                target_audience: values.get("target_audience"),
+                goals: toList("goals"),
+                platforms: values.getAll("platforms"),
+            };
+            try {
+                const brand = await request("/api/brands", { method: "POST", body: JSON.stringify(payload) });
+                showMessage(brandMessage, `${brand.name} saved to your workspace.`, "success");
+                form.reset();
+                setLocation(31.5204, 74.3587);
+                await loadBrands();
+            } catch (error) {
+                showMessage(brandMessage, error.message, "error");
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        logoutButton.addEventListener("click", () => {
+            sessionStorage.removeItem("abgie-token");
+            workspaceView.hidden = true;
+            authView.hidden = false;
+            logoutButton.hidden = true;
+            sessionLabel.textContent = "Your workspace";
+            authForm.reset();
+            setAuthMode("login");
+        });
+        document.querySelector("#refresh-button").addEventListener("click", loadBrands);
+
+        if (sessionStorage.getItem("abgie-token")) {
+            request("/api/auth/me")
+                .then(setAuthenticated)
+                .catch(() => sessionStorage.removeItem("abgie-token"));
+        }
+    </script>
+</body>
+
+</html>
